@@ -16,7 +16,7 @@ export default async function TemplatesPage() {
   console.log("data", data);
   return (
     <div>
-      <p>List of Templates here</p>
+      <p>Get started with designs</p>
 
       <PexelsSidebar photos={data.photos} />
     </div>
