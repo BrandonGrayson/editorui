@@ -34,6 +34,8 @@ export default function PexelsSidebar({ photos }: PexelsResponse) {
   const CANVAS_WIDTH = 1080;
   const CANVAS_HEIGHT = 1920;
 
+  console.log("photos", photos);
+
   // Canvas rotation effect
   useEffect(() => {
     if (!image) return;
@@ -130,53 +132,62 @@ export default function PexelsSidebar({ photos }: PexelsResponse) {
     if (displayPanel === "Design") {
       setSideBar("Design");
     } else if (displayPanel === "Uploads") {
-      setSideBar('Uploads')
+      setSideBar("Uploads");
     }
   };
 
   const renderSidePanel = () => {
     if (sideBar === "Design") {
       return (
-      <div>
-        <p>Templates</p>
-      </div>
-      )
+        <div>
+          <Typography>Templates for you</Typography>
+          <Stack direction="row" style={{display: 'flex', flexWrap: 'wrap'}}>
+            {photos.map((photo) => (
+              <img
+                style={{ height: "14em", width: "10em" }}
+                title="default"
+                src={photo.src.original}
+                key={photo.id}
+              />
+            ))}
+          </Stack>
+        </div>
+      );
     } else if (sideBar === "Uploads") {
       return (
-      <div>
-        <Typography>Upload Side Bar</Typography>
-        <input
-          title="Upload"
-          type="file"
-          accept="image/*"
-          onChange={handleUpload}
-        />
-        <div style={{ marginTop: "20px" }}>
-          <canvas
-            width={CANVAS_WIDTH}
-            height={CANVAS_HEIGHT}
-            ref={canvasRef}
-            style={{
-              width: "360px",
-              height: "640px",
-              display: image ? "block" : "none",
-            }}
+        <div>
+          <Typography>Upload Side Bar</Typography>
+          <input
+            title="Upload"
+            type="file"
+            accept="image/*"
+            onChange={handleUpload}
           />
           <div style={{ marginTop: "20px" }}>
-            <Button onClick={startRecording}>Start Recording</Button>
-            <Button onClick={stopRecording}>Stop & Download WebM</Button>
+            <canvas
+              width={CANVAS_WIDTH}
+              height={CANVAS_HEIGHT}
+              ref={canvasRef}
+              style={{
+                width: "360px",
+                height: "640px",
+                display: image ? "block" : "none",
+              }}
+            />
+            <div style={{ marginTop: "20px" }}>
+              <Button onClick={startRecording}>Start Recording</Button>
+              <Button onClick={stopRecording}>Stop & Download WebM</Button>
+            </div>
           </div>
         </div>
-      </div>
-      )
-
+      );
     }
   };
 
   return (
     <div>
       <Grid container>
-        <Grid size={2}>
+        <Grid size={1}>
           <Stack spacing={3}>
             <div>
               <Stack>
@@ -197,15 +208,16 @@ export default function PexelsSidebar({ photos }: PexelsResponse) {
 
             <div>
               <Stack>
-                <DriveFolderUploadIcon style={{ cursor: "pointer" }} onClick={() => handleSideBarClick("Uploads")} />
+                <DriveFolderUploadIcon
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleSideBarClick("Uploads")}
+                />
                 <Typography>Uploads</Typography>
               </Stack>
             </div>
           </Stack>
         </Grid>
-        <Grid size={5}>
-          {renderSidePanel()}
-        </Grid>
+        <Grid size={4}>{renderSidePanel()}</Grid>
       </Grid>
     </div>
   );
