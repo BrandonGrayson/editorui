@@ -6,13 +6,14 @@ import {
   Stack,
   Typography,
   Button,
-  IconButton,
-  Drawer,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import AutoAwesomeMosaicIcon from "@mui/icons-material/AutoAwesomeMosaic";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import HomeIcon from "@mui/icons-material/Home";
 import Link from "next/link";
+import SearchIcon from "@mui/icons-material/Search";
 
 interface Photo {
   id: number;
@@ -24,15 +25,23 @@ interface PexelsResponse {
   photos: Photo[];
 }
 
-export default function PexelsSidebar({ photos }: PexelsResponse) {
+export default function PexelsSidebar({
+  photos,
+}: {
+  photos: Photo[];
+}) {
   const [image, setImage] = useState<Photo | null>(null);
   const [sideBar, setSideBar] = useState("Design");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [name, setName] = useState("");
+  const [templatePhotos, setTemplatePhotos] = useState(photos)
 
   const CANVAS_WIDTH = 1080;
   const CANVAS_HEIGHT = 1920;
+
+  // const searchList = use(search)
 
   console.log("photos", photos);
 
@@ -136,16 +145,51 @@ export default function PexelsSidebar({ photos }: PexelsResponse) {
     }
   };
 
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setName(event.target.value);
+  };
+
+  console.log("name", name);
+
+  const handleSearchClick = async () => {
+    if (!name) return;
+    const res = await fetch(`/api/search?query=${encodeURIComponent(name)}&per_page=20`);
+    const photos: Photo[] = await res.json();
+    setTemplatePhotos(photos);
+  };
+
+  console.log('templatePhotos', templatePhotos)
+
   const renderSidePanel = () => {
     if (sideBar === "Design") {
       return (
         <div>
+          <TextField
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <SearchIcon
+                      onClick={handleSearchClick}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            style={{ backgroundColor: "white", width: "100%" }}
+            id="outlined-basic"
+            label="Search Mobile Video Templates"
+            variant="outlined"
+            placeholder="Search Templates"
+            onChange={handleSearchChange}
+          />
           <Typography>Templates for you</Typography>
-          <Stack direction="row" style={{display: 'flex', flexWrap: 'wrap'}}>
-            {photos.map((photo) => (
+          <Stack direction="row" style={{ display: "flex", flexWrap: "wrap" }}>
+            {templatePhotos.map((photo) => (
               <img
                 style={{ height: "14em", width: "10em" }}
-                title="default"
+                title="default Pexel Templates"
                 src={photo.src.original}
                 key={photo.id}
               />
@@ -187,7 +231,7 @@ export default function PexelsSidebar({ photos }: PexelsResponse) {
   return (
     <div>
       <Grid container>
-        <Grid size={1}>
+        <Grid style={{ marginTop: "20px" }} size={1}>
           <Stack spacing={3}>
             <div>
               <Stack>
@@ -217,7 +261,9 @@ export default function PexelsSidebar({ photos }: PexelsResponse) {
             </div>
           </Stack>
         </Grid>
-        <Grid size={4}>{renderSidePanel()}</Grid>
+        <Grid style={{ marginTop: "20px" }} size={3}>
+          {renderSidePanel()}
+        </Grid>
       </Grid>
     </div>
   );
