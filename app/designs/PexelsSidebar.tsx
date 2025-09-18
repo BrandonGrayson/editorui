@@ -14,6 +14,7 @@ import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import HomeIcon from "@mui/icons-material/Home";
 import Link from "next/link";
 import SearchIcon from "@mui/icons-material/Search";
+import { CanvasItem } from "@/types/baseTypes";
 
 interface Photo {
   id: number;
@@ -25,18 +26,15 @@ interface PexelsResponse {
   photos: Photo[];
 }
 
-export default function PexelsSidebar({
-  photos,
-}: {
-  photos: Photo[];
-}) {
+export default function PexelsSidebar({ photos }: { photos: Photo[] }) {
   const [image, setImage] = useState<Photo | null>(null);
   const [sideBar, setSideBar] = useState("Design");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [name, setName] = useState("");
-  const [templatePhotos, setTemplatePhotos] = useState(photos)
+  const [templatePhotos, setTemplatePhotos] = useState(photos);
+  const [canvasItems, setCanvasItems] = useState<CanvasItem[]> ([])
 
   const CANVAS_WIDTH = 1080;
   const CANVAS_HEIGHT = 1920;
@@ -153,12 +151,14 @@ export default function PexelsSidebar({
 
   const handleSearchClick = async () => {
     if (!name) return;
-    const res = await fetch(`/api/search?query=${encodeURIComponent(name)}&per_page=20`);
+    const res = await fetch(
+      `/api/search?query=${encodeURIComponent(name)}&per_page=20`
+    );
     const photos: Photo[] = await res.json();
     setTemplatePhotos(photos);
   };
 
-  console.log('templatePhotos', templatePhotos)
+  console.log("templatePhotos", templatePhotos);
 
   const renderSidePanel = () => {
     if (sideBar === "Design") {
@@ -192,6 +192,10 @@ export default function PexelsSidebar({
                 title="default Pexel Templates"
                 src={photo.src.original}
                 key={photo.id}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("template", JSON.stringify(photo));
+                }}
               />
             ))}
           </Stack>
@@ -263,6 +267,51 @@ export default function PexelsSidebar({
         </Grid>
         <Grid style={{ marginTop: "20px" }} size={3}>
           {renderSidePanel()}
+        </Grid>
+        <Grid size={8}>
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              const data = e.dataTransfer.getData("template");
+              if (data) {
+                const photo = JSON.parse(data);
+                setCanvasItems((prev) => [
+                  ...prev,
+                  { ...photo, x: 100, y: 100 },
+                ]);
+              }
+            }}
+            style={{
+              width: "800px",
+              height: "600px",
+              border: "1px solid #ccc",
+              position: "relative",
+              background: "#f0f0f0",
+            }}
+          >
+            {canvasItems.map((item, idx) => (
+              <img
+                key={idx}
+                title="Canvas Items"
+                src={item.src.original}
+                style={{
+                  position: "absolute",
+                  left: item.x,
+                  top: item.y,
+                  width: 200,
+                  cursor: "move",
+                }}
+                draggable
+                onDragEnd={(e) => {
+                  setCanvasItems((prev) =>
+                    prev.map((it, i) =>
+                      i === idx ? { ...it, x: e.clientX, y: e.clientY } : it
+                    )
+                  );
+                }}
+              />
+            ))}
+          </div>
         </Grid>
       </Grid>
     </div>
